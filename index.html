@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALLCON - Expediting & Follow-Up Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <style>
+    html.dark, html.dark body { background-color: #0b0b0c !important; color: #f4f4f5 !important; }
+    html.dark input, html.dark select, html.dark textarea { background-color: #27272a !important; color: #ffffff !important; border-color: #3f3f46 !important; }
+    .floating-bubble {
+      background: rgba(24, 24, 27, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body class="bg-[#0b0b0c] text-zinc-100 font-sans min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-[#121215] text-white shadow-lg border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="bg-red-600 text-white font-black px-2.5 py-1 rounded text-lg tracking-wider shadow-md">ALLCON</div>
+        <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          Expediting Tracker <span class="text-xs bg-amber-500 text-black font-extrabold px-2 py-0.5 rounded-full uppercase">Priority Follow-Ups</span>
+        </h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-left"></i> Dashboard
+        </a>
+        <button onclick="openExpeditingModal()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus text-[10px]"></i> Track New Item
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-grow w-full">
+    <div class="floating-bubble p-4 rounded-2xl mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="w-full md:w-1/2 relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-zinc-500"></i>
+        <input type="text" id="expediting-search" onkeyup="renderItems()" placeholder="Search by Project ID, Name, PO, or Supplier..." class="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-zinc-800">
+      </div>
+      <div class="text-xs text-zinc-400 font-semibold" id="item-count">Loading Items...</div>
+    </div>
+
+    <!-- CARDS / LIST CONTAINER -->
+    <div id="expediting-container" class="space-y-4">
+      <div class="text-center p-12 text-zinc-500"><i class="fa-solid fa-spinner fa-spin mr-2 text-red-500"></i> Loading Expediting Records...</div>
+    </div>
+  </main>
+
+  <!-- ADD ITEM MODAL -->
+  <div id="expediting-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="floating-bubble border border-zinc-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-4 mb-4">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-red-500"></i> Add Priority Follow-Up Item
+        </h2>
+        <button onclick="closeExpeditingModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="expediting-form" onsubmit="handleExpeditingSubmit(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">PROJECT ID</label>
+            <input type="text" id="field-project-id" required placeholder="e.g. PRJ-2026-04" class="w-full p-2.5 rounded-xl border">
+          </div>
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">PROJECT NAME</label>
+            <input type="text" id="field-project-name" required placeholder="e.g. Tanks Fabrication" class="w-full p-2.5 rounded-xl border">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-zinc-300 mb-1">ITEM / DESCRIPTION</label>
+          <input type="text" id="field-item-desc" required placeholder="e.g. 200L Flanged Nozzles & Rubber Linings" class="w-full p-2.5 rounded-xl border">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">SUPPLIER</label>
+            <input type="text" id="field-supplier" required placeholder="Supplier Name" class="w-full p-2.5 rounded-xl border">
+          </div>
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">PO NUMBER</label>
+            <input type="text" id="field-po-number" required placeholder="PO-XXXXX" class="w-full p-2.5 rounded-xl border">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">DATE ORDERED / COLLECTED</label>
+            <input type="date" id="field-date-collected" required class="w-full p-2.5 rounded-xl border">
+          </div>
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">EXPECTED ETA</label>
+            <input type="date" id="field-eta" required class="w-full p-2.5 rounded-xl border">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-zinc-300 mb-1">EMAIL REMINDER FREQUENCY</label>
+          <select id="field-frequency" required class="w-full p-2.5 rounded-xl border font-semibold text-red-400">
+            <option value="DAILY">DAILY (Urgent Follow-Up)</option>
+            <option value="WEEKLY" selected>WEEKLY (Standard Tracking)</option>
+            <option value="MONTHLY">MONTHLY (Long Lead Times)</option>
+          </select>
+        </div>
+
+        <div class="pt-4 border-t border-zinc-800 flex justify-end gap-3">
+          <button type="button" onclick="closeExpeditingModal()" class="px-4 py-2 bg-zinc-800 text-white rounded-xl">Cancel</button>
+          <button type="submit" id="submit-exp-btn" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg">
+            Save & Start Reminders
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- COMMENT MODAL -->
+  <div id="comment-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="floating-bubble border border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-regular fa-comment-dots text-red-500"></i> Log Follow-up Comment
+        </h2>
+        <button onclick="closeCommentModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <input type="hidden" id="comment-target-po">
+      <input type="hidden" id="comment-target-item">
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-zinc-400 mb-1">NEW FOLLOW-UP NOTE</label>
+          <textarea id="comment-input" rows="3" placeholder="e.g. Called supplier rep John; plates currently in laser cutting, ETA pushed to Friday." class="w-full p-3 rounded-xl border border-zinc-800 bg-[#27272a] text-white"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-zinc-400 mb-1">PREVIOUS LOGS</label>
+          <div id="comment-history" class="p-3 bg-[#27272a]/70 rounded-xl text-zinc-300 font-mono text-[11px] max-h-40 overflow-y-auto whitespace-pre-wrap border border-zinc-800">
+            No previous comments.
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-zinc-800 flex justify-end gap-3">
+          <button type="button" onclick="closeCommentModal()" class="px-4 py-2 bg-zinc-800 text-white rounded-xl">Close</button>
+          <button type="button" onclick="submitComment()" id="save-comment-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg">
+            Save Log Entry
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZu54syPvg0a_BKBRtx-r9xaT45HS_ypbGccNH5w2aGrcsbvkRZeHsyMUxol51cv2vrg/exec";
+    let expeditingData = [];
+
+    async function loadExpeditingData() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const json = await res.json();
+        expeditingData = (json.items || []).map(r => ({
+          status: r['STATUS'] || 'PENDING',
+          projectId: r['PROJECT ID'] || '',
+          projectName: r['PROJECT NAME'] || '',
+          itemDescription: r['ITEM DESCRIPTION'] || '',
+          supplier: r['SUPPLIER'] || '',
+          poNumber: r['PO NUMBER'] || '',
+          dateCollected: r['DATE ORDERED/COLLECTED'] || '',
+          eta: r['ETA'] || '',
+          frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
+          lastNotified: r['LAST NOTIFIED'] || 'Never',
+          comments: r['COMMENTS'] || ''
+        }));
+        renderItems();
+      } catch (e) {
+        console.error("Failed loading data", e);
+        document.getElementById('expediting-container').innerHTML = `<div class="text-center p-8 floating-bubble rounded-2xl text-red-400">Failed to load records from Google Sheets. Please check your Web App deployment.</div>`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadExpeditingData);
+
+    function openExpeditingModal() { document.getElementById('expediting-modal').classList.remove('hidden'); }
+    function closeExpeditingModal() { document.getElementById('expediting-modal').classList.add('hidden'); }
+
+    function openCommentModal(poNumber, itemDesc) {
+      const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
+      if (!item) return;
+
+      document.getElementById('comment-target-po').value = poNumber;
+      document.getElementById('comment-target-item').value = itemDesc;
+      document.getElementById('comment-input').value = '';
+      document.getElementById('comment-history').innerText = item.comments || 'No previous comments logged.';
+      
+      document.getElementById('comment-modal').classList.remove('hidden');
+    }
+
+    function closeCommentModal() { document.getElementById('comment-modal').classList.add('hidden'); }
+
+    async function submitComment() {
+      const poNumber = document.getElementById('comment-target-po').value;
+      const itemDesc = document.getElementById('comment-target-item').value;
+      const commentText = document.getElementById('comment-input').value.trim();
+      
+      if (!commentText) return;
+
+      const btn = document.getElementById('save-comment-btn');
+      btn.disabled = true;
+      btn.innerText = "Saving...";
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add_comment', poNumber, itemDescription: itemDesc, commentText })
+        });
+
+        const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        const formatted = `[${timestamp}] ${commentText}`;
+        if (item) {
+          item.comments = item.comments ? `${item.comments}\n${formatted}` : formatted;
+        }
+
+        closeCommentModal();
+        renderItems();
+      } catch (err) {
+        alert("Error logging comment.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Save Log Entry";
+      }
+    }
+
+    async function handleExpeditingSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-exp-btn');
+      btn.disabled = true;
+      btn.innerText = "Saving...";
+
+      const payload = {
+        action: 'add',
+        status: 'PENDING',
+        projectId: document.getElementById('field-project-id').value,
+        projectName: document.getElementById('field-project-name').value,
+        itemDescription: document.getElementById('field-item-desc').value,
+        supplier: document.getElementById('field-supplier').value,
+        poNumber: document.getElementById('field-po-number').value,
+        dateCollected: document.getElementById('field-date-collected').value,
+        eta: document.getElementById('field-eta').value,
+        frequency: document.getElementById('field-frequency').value,
+        comments: ''
+      };
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        expeditingData.unshift(payload);
+        closeExpeditingModal();
+        renderItems();
+      } catch (err) {
+        alert("Error saving item.");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Save & Start Reminders";
+      }
+    }
+
+    async function toggleComplete(poNumber, itemDesc, currentStatus) {
+      const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+      const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
+      if (item) item.status = newStatus;
+      renderItems();
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_status', poNumber, itemDescription: itemDesc, status: newStatus })
+      });
+    }
+
+    function renderItems() {
+      const query = (document.getElementById('expediting-search').value || '').toLowerCase();
+      const container = document.getElementById('expediting-container');
+
+      const filtered = expeditingData.filter(i =>
+        i.projectId.toLowerCase().includes(query) ||
+        i.projectName.toLowerCase().includes(query) ||
+        i.poNumber.toLowerCase().includes(query) ||
+        i.supplier.toLowerCase().includes(query) ||
+        i.itemDescription.toLowerCase().includes(query)
+      );
+
+      document.getElementById('item-count').innerText = `${filtered.length} Active Items`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center p-12 floating-bubble rounded-2xl text-zinc-500">No expediting records found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(i => {
+        const isCompleted = i.status === 'COMPLETED';
+        const safePo = i.poNumber.replace(/'/g, "\\'");
+        const safeItem = i.itemDescription.replace(/'/g, "\\'");
+
+        return `
+          <div class="floating-bubble border ${isCompleted ? 'border-emerald-800/40 opacity-60' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-black px-2 py-0.5 rounded ${isCompleted ? 'bg-emerald-600' : 'bg-amber-600'} text-white uppercase">${i.status}</span>
+                  <span class="text-xs font-bold text-red-500">${i.projectId} — ${i.projectName}</span>
+                  <span class="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono">PO: ${i.poNumber}</span>
+                </div>
+                <h3 class="text-base font-bold text-white">${i.itemDescription}</h3>
+                <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-1">
+                  <span><strong class="text-zinc-200">Supplier:</strong> ${i.supplier}</span>
+                  <span><strong class="text-zinc-200">Ordered:</strong> ${i.dateCollected}</span>
+                  <span><strong class="text-zinc-200">ETA:</strong> ${i.eta}</span>
+                  <span><strong class="text-zinc-200">Reminder:</strong> ${i.frequency}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openCommentModal('${safePo}', '${safeItem}')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-xl font-semibold transition flex items-center gap-1.5 border border-zinc-700 shadow">
+                  <i class="fa-regular fa-comment-dots text-red-400"></i> Log Note
+                </button>
+                <button onclick="toggleComplete('${safePo}', '${safeItem}', '${i.status}')" class="text-xs px-4 py-2 rounded-xl font-bold transition shadow ${isCompleted ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}">
+                  <i class="fa-solid ${isCompleted ? 'fa-rotate-left' : 'fa-check'} mr-1"></i> ${isCompleted ? 'Reopen' : 'Mark Completed'}
+                </button>
+              </div>
+            </div>
+            ${i.comments ? `
+              <div class="mt-2 p-3 bg-black/40 border border-zinc-800 rounded-xl text-xs font-mono text-zinc-300 whitespace-pre-wrap">
+                <strong class="text-zinc-400 font-sans block mb-1 text-[10px] uppercase tracking-wider">Follow-Up History:</strong>
+                ${i.comments}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
