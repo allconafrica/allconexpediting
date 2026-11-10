@@ -38,7 +38,7 @@
           <i class="fa-solid fa-list-check"></i> Tracker View
         </button>
         <button onclick="switchView('admin')" id="nav-admin" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 border border-zinc-700">
-          <i class="fa-solid fa-user-gear text-amber-400"></i> Admin & Mail Settings
+          <i class="fa-solid fa-user-gear text-amber-400"></i> Admin Console
         </button>
         <button onclick="openExpeditingModal()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg transition flex items-center gap-1.5">
           <i class="fa-solid fa-plus text-[10px]"></i> Track Item
@@ -54,18 +54,14 @@
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-zinc-500"></i>
         <input type="text" id="expediting-search" onkeyup="renderItems()" placeholder="Search Project ID, Name, PO, Supplier, or Buyer..." class="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-zinc-800">
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 flex-wrap">
         <select id="buyer-filter" onchange="renderItems()" class="px-3 py-2 rounded-xl text-xs font-bold border border-zinc-800 bg-zinc-800 text-zinc-200">
           <option value="ALL">All Buyers</option>
           <option value="Norman">Norman</option>
           <option value="Norlene">Norlene</option>
         </select>
         <select id="status-filter" onchange="renderItems()" class="px-3 py-2 rounded-xl text-xs font-bold border border-zinc-800 bg-zinc-800 text-zinc-200">
-          <option value="ALL">All Statuses</option>
-          <option value="PO Sent">PO Sent</option>
-          <option value="Waiting on Free Issue">Waiting on Free Issue</option>
-          <option value="Busy">Busy</option>
-          <option value="Completed">Completed</option>
+          <!-- Dynamic options loaded via JS -->
         </select>
         <div class="text-xs text-zinc-400 font-semibold" id="item-count">Loading Items...</div>
       </div>
@@ -89,37 +85,55 @@
           </h2>
           <span class="text-xs bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono" id="recipient-count">0 Active</span>
         </div>
-        <p class="text-xs text-zinc-400">Team members listed below will automatically receive daily email digests containing pending follow-up logs and ETAs.</p>
+        <p class="text-xs text-zinc-400">Team members listed below will automatically receive daily email digests containing pending follow-up logs, ETAs, and overdue notices.</p>
 
-        <!-- ADD RECIPIENT FORM -->
         <form onsubmit="handleAddRecipient(event)" class="flex gap-3 text-xs pt-2">
           <input type="text" id="rec-name" required placeholder="Name (e.g. Norlene)" class="w-1/3 p-2.5 rounded-xl border">
           <input type="email" id="rec-email" required placeholder="Email Address" class="w-1/2 p-2.5 rounded-xl border">
           <button type="submit" id="add-rec-btn" class="w-1/6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition">Add Member</button>
         </form>
 
-        <!-- RECIPIENTS LIST -->
         <div id="recipients-list" class="space-y-2 pt-3">
           <div class="text-center p-4 text-zinc-500 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Loading Subscribers...</div>
         </div>
       </div>
 
-      <!-- SYSTEM UTILITIES & CONTROLS -->
-      <div class="floating-bubble p-6 rounded-2xl border border-zinc-800 space-y-4 h-fit">
+      <!-- STATUS DROPDOWN MANAGER -->
+      <div class="floating-bubble p-6 rounded-2xl border border-zinc-800 space-y-4">
+        <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-tags text-amber-400"></i> Status Manager
+          </h2>
+          <span class="text-xs bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono" id="status-count">0 Statuses</span>
+        </div>
+        <p class="text-xs text-zinc-400">Add or remove custom statuses for your expediting dropdowns.</p>
+
+        <form onsubmit="handleAddStatus(event)" class="flex gap-2 text-xs pt-2">
+          <input type="text" id="status-name-input" required placeholder="Status Name" class="w-3/4 p-2.5 rounded-xl border">
+          <button type="submit" id="add-status-btn" class="w-1/4 bg-amber-600 hover:bg-amber-700 text-black font-bold rounded-xl shadow transition">Add</button>
+        </form>
+
+        <div id="admin-statuses-list" class="space-y-2 pt-3">
+          <div class="text-center p-4 text-zinc-500 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Loading Statuses...</div>
+        </div>
+      </div>
+
+      <!-- SYSTEM UTILITIES -->
+      <div class="floating-bubble p-6 rounded-2xl border border-zinc-800 space-y-4 md:col-span-3">
         <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-3">
-          <i class="fa-solid fa-sliders text-amber-400"></i> System Utilities
+          <i class="fa-solid fa-sliders text-red-500"></i> System Utilities
         </h2>
         
-        <div class="space-y-3 text-xs">
-          <div class="p-3 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
             <h4 class="font-bold text-white mb-1">Manual Trigger Email</h4>
-            <p class="text-zinc-400 mb-3 text-[11px]">Send an immediate test digest email to all subscribers listed on the left.</p>
+            <p class="text-zinc-400 mb-3 text-[11px]">Send an immediate test digest email to all active subscribers.</p>
             <button onclick="triggerTestEmail()" id="trigger-mail-btn" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-black font-bold rounded-lg shadow transition">
               <i class="fa-solid fa-paper-plane mr-1"></i> Trigger Daily Email Now
             </button>
           </div>
 
-          <div class="p-3 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
+          <div class="p-4 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
             <h4 class="font-bold text-white mb-1">Google Sheets Backend</h4>
             <p class="text-zinc-400 text-[11px] mb-2">Master data storage resides securely in your synced Google Sheet repository.</p>
             <a href="https://docs.google.com/spreadsheets/d/14neZV7GrX4hZNXabbPXCF9UlnlImbg95i7WsgWhk" target="_blank" class="text-red-400 hover:underline flex items-center gap-1 font-mono text-[11px]">
@@ -147,10 +161,7 @@
           <div>
             <label class="block font-bold text-zinc-300 mb-1">STATUS</label>
             <select id="field-status" required class="w-full p-2.5 rounded-xl border font-bold text-emerald-400">
-              <option value="PO Sent" selected>PO Sent</option>
-              <option value="Waiting on Free Issue">Waiting on Free Issue</option>
-              <option value="Busy">Busy</option>
-              <option value="Completed">Completed</option>
+              <!-- Dynamic -->
             </select>
           </div>
           <div>
@@ -259,12 +270,25 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZu54syPvg0a_BKBRtx-r9xaT45HS_ypbGccNH5w2aGrcsbvkRZeHsyMUxol51cv2vrg/exec";
     let expeditingData = [];
     let recipientsData = [];
+    let activeStatuses = ['PO Sent', 'Waiting on Free Issue', 'Busy', 'Completed'];
+
+    function cleanDateStr(val) {
+      if (!val) return 'N/A';
+      if (typeof val === 'string' && val.includes('T')) {
+        return val.split('T')[0];
+      }
+      return String(val).substring(0, 10);
+    }
 
     async function loadData() {
       try {
         const res = await fetch(SCRIPT_URL);
         const json = await res.json();
         
+        if (json.statuses && json.statuses.length > 0) {
+          activeStatuses = json.statuses;
+        }
+
         expeditingData = (json.items || []).map(r => ({
           status: r['STATUS'] || 'PO Sent',
           buyer: r['BUYER'] || 'Norman',
@@ -273,16 +297,19 @@
           itemDescription: r['ITEM DESCRIPTION'] || '',
           supplier: r['SUPPLIER'] || '',
           poNumber: r['PO NUMBER'] || '',
-          dateCollected: r['DATE ORDERED/COLLECTED'] || '',
-          eta: r['ETA'] || '',
+          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED']),
+          eta: cleanDateStr(r['ETA']),
           frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
-          lastNotified: r['LAST NOTIFIED'] || 'Never',
+          lastNotified: cleanDateStr(r['LAST NOTIFIED']),
           comments: r['COMMENTS'] || ''
         }));
 
         recipientsData = json.recipients || [];
+        
+        populateStatusDropdowns();
         renderItems();
         renderRecipients();
+        renderAdminStatuses();
       } catch (e) {
         console.error("Failed loading data", e);
         document.getElementById('expediting-container').innerHTML = `<div class="text-center p-8 floating-bubble rounded-2xl text-red-400">Failed to load records from Google Sheets.</div>`;
@@ -290,6 +317,17 @@
     }
 
     document.addEventListener("DOMContentLoaded", loadData);
+
+    function populateStatusDropdowns() {
+      // Filter dropdown
+      const filterSelect = document.getElementById('status-filter');
+      filterSelect.innerHTML = `<option value="ALL">All Statuses</option>` + 
+        activeStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+
+      // Modal select
+      const modalSelect = document.getElementById('field-status');
+      modalSelect.innerHTML = activeStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
 
     function switchView(view) {
       if (view === 'tracker') {
@@ -407,6 +445,69 @@
       });
     }
 
+    async function changeFrequency(poNumber, itemDesc, newFreq) {
+      const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
+      if (item) item.frequency = newFreq;
+      renderItems();
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_frequency', poNumber, itemDescription: itemDesc, frequency: newFreq })
+      });
+    }
+
+    // ADMIN STATUSES LOGIC
+    async function handleAddStatus(e) {
+      e.preventDefault();
+      const statusName = document.getElementById('status-name-input').value.trim();
+      if (!statusName) return;
+
+      const btn = document.getElementById('add-status-btn');
+      btn.disabled = true;
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_status', statusName })
+      });
+
+      if (!activeStatuses.includes(statusName)) activeStatuses.push(statusName);
+      document.getElementById('status-name-input').value = '';
+      btn.disabled = false;
+      populateStatusDropdowns();
+      renderAdminStatuses();
+    }
+
+    async function removeStatus(statusName) {
+      activeStatuses = activeStatuses.filter(s => s !== statusName);
+      populateStatusDropdowns();
+      renderAdminStatuses();
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove_status', statusName })
+      });
+    }
+
+    function renderAdminStatuses() {
+      const container = document.getElementById('admin-statuses-list');
+      document.getElementById('status-count').innerText = `${activeStatuses.length} Statuses`;
+
+      container.innerHTML = activeStatuses.map(s => `
+        <div class="p-2.5 bg-[#27272a]/60 border border-zinc-800 rounded-xl flex justify-between items-center text-xs">
+          <span class="text-white font-bold">${s}</span>
+          <button onclick="removeStatus('${s}')" class="text-zinc-500 hover:text-red-400 p-1 transition">
+            <i class="fa-solid fa-trash text-[11px]"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
     // ADMIN RECIPIENTS LOGIC
     async function handleAddRecipient(e) {
       e.preventDefault();
@@ -488,6 +589,9 @@
       const statusFilter = document.getElementById('status-filter').value;
       const container = document.getElementById('expediting-container');
 
+      const today = new Date();
+      today.setHours(0,0,0,0);
+
       const filtered = expeditingData.filter(i => {
         const matchesQuery = i.projectId.toLowerCase().includes(query) ||
           i.projectName.toLowerCase().includes(query) ||
@@ -512,43 +616,67 @@
         const safePo = i.poNumber.replace(/'/g, "\\'");
         const safeItem = i.itemDescription.replace(/'/g, "\\'");
 
-        // Status pill color mapping
+        // Overdue Calculation
+        let isOverdue = false;
+        if (i.eta && i.eta !== 'N/A' && !isCompleted) {
+          const etaD = new Date(i.eta);
+          if (!isNaN(etaD.getTime())) {
+            etaD.setHours(0,0,0,0);
+            if (today > etaD) isOverdue = true;
+          }
+        }
+
         let statusBadgeColor = 'bg-blue-600';
         if (i.status === 'Waiting on Free Issue') statusBadgeColor = 'bg-amber-600';
         if (i.status === 'Busy') statusBadgeColor = 'bg-purple-600';
         if (i.status === 'Completed') statusBadgeColor = 'bg-emerald-600';
 
         return `
-          <div class="floating-bubble border ${isCompleted ? 'border-emerald-800/40 opacity-60' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
+          <div class="floating-bubble border ${isOverdue ? 'border-red-600/70 shadow-red-950/20' : isCompleted ? 'border-emerald-800/40 opacity-60' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div class="space-y-1">
+              <div class="space-y-1 w-full">
                 <div class="flex items-center gap-2 flex-wrap">
                   <!-- INLINE STATUS DROPDOWN -->
                   <select onchange="changeStatus('${safePo}', '${safeItem}', this.value)" class="text-[10px] font-black px-2 py-1 rounded ${statusBadgeColor} text-white uppercase border-none cursor-pointer">
-                    <option value="PO Sent" ${i.status === 'PO Sent' ? 'selected' : ''}>PO Sent</option>
-                    <option value="Waiting on Free Issue" ${i.status === 'Waiting on Free Issue' ? 'selected' : ''}>Waiting on Free Issue</option>
-                    <option value="Busy" ${i.status === 'Busy' ? 'selected' : ''}>Busy</option>
-                    <option value="Completed" ${i.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                    ${activeStatuses.map(s => `<option value="${s}" ${i.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                   </select>
 
                   <span class="text-xs font-black bg-zinc-800 text-amber-400 px-2 py-0.5 rounded uppercase">Buyer: ${i.buyer}</span>
                   <span class="text-xs font-bold text-red-500">${i.projectId} — ${i.projectName}</span>
-                  <span class="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono">PO: ${i.poNumber}</span>
+                  
+                  ${isOverdue ? `<span class="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded uppercase animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Overdue</span>` : ''}
                 </div>
-                <h3 class="text-base font-bold text-white">${i.itemDescription}</h3>
-                <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-1">
-                  <span><strong class="text-zinc-200">Supplier:</strong> ${i.supplier}</span>
-                  <span><strong class="text-zinc-200">Ordered:</strong> ${i.dateCollected}</span>
-                  <span><strong class="text-zinc-200">ETA:</strong> ${i.eta}</span>
-                  <span><strong class="text-zinc-200">Reminder:</strong> ${i.frequency}</span>
+
+                <h3 class="text-base font-bold text-white pt-1">${i.itemDescription}</h3>
+
+                <!-- METADATA GRID (PO PROMOTED HERE) -->
+                <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-2 border-t border-zinc-800/60 mt-2">
+                  <span class="bg-red-950/40 border border-red-800/50 px-2.5 py-1 rounded-lg font-mono text-red-300">
+                    <strong class="text-red-400 font-sans uppercase text-[10px]">PO:</strong> ${i.poNumber}
+                  </span>
+                  <span class="py-1"><strong class="text-zinc-200">Supplier:</strong> ${i.supplier}</span>
+                  <span class="py-1"><strong class="text-zinc-200">Ordered:</strong> ${i.dateCollected}</span>
+                  <span class="py-1 ${isOverdue ? 'text-red-400 font-bold' : ''}"><strong class="text-zinc-200">ETA:</strong> ${i.eta}</span>
+                  
+                  <!-- INLINE FREQUENCY SELECTOR -->
+                  <div class="flex items-center gap-1.5 py-0.5">
+                    <strong class="text-zinc-200">Reminder:</strong>
+                    <select onchange="changeFrequency('${safePo}', '${safeItem}', this.value)" class="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-800 text-red-400 border border-zinc-700 cursor-pointer">
+                      <option value="DAILY" ${i.frequency === 'DAILY' ? 'selected' : ''}>DAILY</option>
+                      <option value="WEEKLY" ${i.frequency === 'WEEKLY' ? 'selected' : ''}>WEEKLY</option>
+                      <option value="MONTHLY" ${i.frequency === 'MONTHLY' ? 'selected' : ''}>MONTHLY</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
+
+              <div class="flex items-center gap-2 shrink-0">
                 <button onclick="openCommentModal('${safePo}', '${safeItem}')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-xl font-semibold transition flex items-center gap-1.5 border border-zinc-700 shadow">
                   <i class="fa-regular fa-comment-dots text-red-400"></i> Log Note
                 </button>
               </div>
             </div>
+
             ${i.comments ? `
               <div class="mt-2 p-3 bg-black/40 border border-zinc-800 rounded-xl text-xs font-mono text-zinc-300 whitespace-pre-wrap">
                 <strong class="text-zinc-400 font-sans block mb-1 text-[10px] uppercase tracking-wider">Follow-Up History:</strong>
