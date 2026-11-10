@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ALLCON - Expediting & Follow-Up Tracker</title>
+  
+  <!-- FAVICON -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23dc2626'/><path d='M152 64H360C373.3 64 384 74.75 384 88V128H128V88C128 74.75 138.7 64 152 64ZM96 160H416V416C416 433.7 401.7 448 384 448H128C110.3 448 96 433.7 96 416V160ZM176 224C162.7 224 152 234.7 152 248C152 261.3 162.7 272 176 272H336C349.3 272 360 261.3 360 248C360 234.7 349.3 224 336 224H176ZM176 320C162.7 320 152 330.7 152 344C152 357.3 162.7 368 176 368H288C301.3 368 312 357.3 312 344C312 330.7 301.3 320 288 320H176Z' fill='%23ffffff'/></svg>">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>tailwind.config = { darkMode: 'class' }</script>
@@ -24,7 +28,6 @@
   <header class="bg-[#121215] text-white shadow-lg border-b border-zinc-800">
     <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
       <div class="flex items-center gap-4">
-        <!-- ALLCON REPOSITORY LOGO ASSET -->
         <img src="https://raw.githubusercontent.com/allconafrica/KERF/main/ALLCON-Logo.jpg" alt="ALLCON Logo" class="h-10 w-auto object-contain rounded bg-white p-1">
         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           Expediting Tracker <span class="text-xs bg-amber-500 text-black font-extrabold px-2 py-0.5 rounded-full uppercase">Priority Follow-Ups</span>
@@ -56,6 +59,13 @@
           <option value="ALL">All Buyers</option>
           <option value="Norman">Norman</option>
           <option value="Norlene">Norlene</option>
+        </select>
+        <select id="status-filter" onchange="renderItems()" class="px-3 py-2 rounded-xl text-xs font-bold border border-zinc-800 bg-zinc-800 text-zinc-200">
+          <option value="ALL">All Statuses</option>
+          <option value="PO Sent">PO Sent</option>
+          <option value="Waiting on Free Issue">Waiting on Free Issue</option>
+          <option value="Busy">Busy</option>
+          <option value="Completed">Completed</option>
         </select>
         <div class="text-xs text-zinc-400 font-semibold" id="item-count">Loading Items...</div>
       </div>
@@ -133,7 +143,16 @@
       </div>
 
       <form id="expediting-form" onsubmit="handleExpeditingSubmit(event)" class="space-y-3 text-xs">
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">STATUS</label>
+            <select id="field-status" required class="w-full p-2.5 rounded-xl border font-bold text-emerald-400">
+              <option value="PO Sent" selected>PO Sent</option>
+              <option value="Waiting on Free Issue">Waiting on Free Issue</option>
+              <option value="Busy">Busy</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">BUYER</label>
             <select id="field-buyer" required class="w-full p-2.5 rounded-xl border font-bold text-amber-400">
@@ -141,6 +160,9 @@
               <option value="Norlene">Norlene</option>
             </select>
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-zinc-300 mb-1">PROJECT ID</label>
             <input type="text" id="field-project-id" required placeholder="PRJ-2026-04" class="w-full p-2.5 rounded-xl border">
@@ -244,7 +266,7 @@
         const json = await res.json();
         
         expeditingData = (json.items || []).map(r => ({
-          status: r['STATUS'] || 'PENDING',
+          status: r['STATUS'] || 'PO Sent',
           buyer: r['BUYER'] || 'Norman',
           projectId: r['PROJECT ID'] || '',
           projectName: r['PROJECT NAME'] || '',
@@ -340,7 +362,7 @@
 
       const payload = {
         action: 'add',
-        status: 'PENDING',
+        status: document.getElementById('field-status').value,
         buyer: document.getElementById('field-buyer').value,
         projectId: document.getElementById('field-project-id').value,
         projectName: document.getElementById('field-project-name').value,
@@ -372,8 +394,7 @@
       }
     }
 
-    async function toggleComplete(poNumber, itemDesc, currentStatus) {
-      const newStatus = currentStatus === 'COMPLETED' ? 'PENDING' : 'COMPLETED';
+    async function changeStatus(poNumber, itemDesc, newStatus) {
       const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
       if (item) item.status = newStatus;
       renderItems();
@@ -464,6 +485,7 @@
     function renderItems() {
       const query = (document.getElementById('expediting-search').value || '').toLowerCase();
       const buyerFilter = document.getElementById('buyer-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
       const container = document.getElementById('expediting-container');
 
       const filtered = expeditingData.filter(i => {
@@ -474,7 +496,8 @@
           i.buyer.toLowerCase().includes(query) ||
           i.itemDescription.toLowerCase().includes(query);
         const matchesBuyer = buyerFilter === 'ALL' || i.buyer === buyerFilter;
-        return matchesQuery && matchesBuyer;
+        const matchesStatus = statusFilter === 'ALL' || i.status === statusFilter;
+        return matchesQuery && matchesBuyer && matchesStatus;
       });
 
       document.getElementById('item-count').innerText = `${filtered.length} Active Items`;
@@ -485,16 +508,29 @@
       }
 
       container.innerHTML = filtered.map(i => {
-        const isCompleted = i.status === 'COMPLETED';
+        const isCompleted = i.status === 'Completed';
         const safePo = i.poNumber.replace(/'/g, "\\'");
         const safeItem = i.itemDescription.replace(/'/g, "\\'");
+
+        // Status pill color mapping
+        let statusBadgeColor = 'bg-blue-600';
+        if (i.status === 'Waiting on Free Issue') statusBadgeColor = 'bg-amber-600';
+        if (i.status === 'Busy') statusBadgeColor = 'bg-purple-600';
+        if (i.status === 'Completed') statusBadgeColor = 'bg-emerald-600';
 
         return `
           <div class="floating-bubble border ${isCompleted ? 'border-emerald-800/40 opacity-60' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-black px-2 py-0.5 rounded ${isCompleted ? 'bg-emerald-600' : 'bg-amber-600'} text-white uppercase">${i.status}</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <!-- INLINE STATUS DROPDOWN -->
+                  <select onchange="changeStatus('${safePo}', '${safeItem}', this.value)" class="text-[10px] font-black px-2 py-1 rounded ${statusBadgeColor} text-white uppercase border-none cursor-pointer">
+                    <option value="PO Sent" ${i.status === 'PO Sent' ? 'selected' : ''}>PO Sent</option>
+                    <option value="Waiting on Free Issue" ${i.status === 'Waiting on Free Issue' ? 'selected' : ''}>Waiting on Free Issue</option>
+                    <option value="Busy" ${i.status === 'Busy' ? 'selected' : ''}>Busy</option>
+                    <option value="Completed" ${i.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                  </select>
+
                   <span class="text-xs font-black bg-zinc-800 text-amber-400 px-2 py-0.5 rounded uppercase">Buyer: ${i.buyer}</span>
                   <span class="text-xs font-bold text-red-500">${i.projectId} — ${i.projectName}</span>
                   <span class="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono">PO: ${i.poNumber}</span>
@@ -510,9 +546,6 @@
               <div class="flex items-center gap-2">
                 <button onclick="openCommentModal('${safePo}', '${safeItem}')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-xl font-semibold transition flex items-center gap-1.5 border border-zinc-700 shadow">
                   <i class="fa-regular fa-comment-dots text-red-400"></i> Log Note
-                </button>
-                <button onclick="toggleComplete('${safePo}', '${safeItem}', '${i.status}')" class="text-xs px-4 py-2 rounded-xl font-bold transition shadow ${isCompleted ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'}">
-                  <i class="fa-solid ${isCompleted ? 'fa-rotate-left' : 'fa-check'} mr-1"></i> ${isCompleted ? 'Reopen' : 'Mark Completed'}
                 </button>
               </div>
             </div>
