@@ -11,7 +11,7 @@
     html.dark, html.dark body { background-color: #0b0b0c !important; color: #f4f4f5 !important; }
     html.dark input, html.dark select, html.dark textarea { background-color: #27272a !important; color: #ffffff !important; border-color: #3f3f46 !important; }
     .floating-bubble {
-      background: rgba(24, 24, 27, 0.7);
+      background: rgba(24, 24, 27, 0.75);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -22,37 +22,103 @@
 
   <!-- HEADER -->
   <header class="bg-[#121215] text-white shadow-lg border-b border-zinc-800">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="bg-red-600 text-white font-black px-2.5 py-1 rounded text-lg tracking-wider shadow-md">ALLCON</div>
+    <div class="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <!-- ALLCON REPOSITORY LOGO ASSET -->
+        <img src="https://raw.githubusercontent.com/allconafrica/KERF/main/ALLCON-Logo.jpg" alt="ALLCON Logo" class="h-10 w-auto object-contain rounded bg-white p-1">
         <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           Expediting Tracker <span class="text-xs bg-amber-500 text-black font-extrabold px-2 py-0.5 rounded-full uppercase">Priority Follow-Ups</span>
         </h1>
       </div>
       <div class="flex items-center gap-3">
-        <a href="index.html" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
-          <i class="fa-solid fa-arrow-left"></i> Dashboard
-        </a>
+        <button onclick="switchView('tracker')" id="nav-tracker" class="bg-red-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow">
+          <i class="fa-solid fa-list-check"></i> Tracker View
+        </button>
+        <button onclick="switchView('admin')" id="nav-admin" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 border border-zinc-700">
+          <i class="fa-solid fa-user-gear text-amber-400"></i> Admin & Mail Settings
+        </button>
         <button onclick="openExpeditingModal()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg transition flex items-center gap-1.5">
-          <i class="fa-solid fa-plus text-[10px]"></i> Track New Item
+          <i class="fa-solid fa-plus text-[10px]"></i> Track Item
         </button>
       </div>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-6 py-8 flex-grow w-full">
+  <!-- TRACKER VIEW -->
+  <main id="view-tracker" class="max-w-7xl mx-auto px-6 py-8 flex-grow w-full">
     <div class="floating-bubble p-4 rounded-2xl mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="w-full md:w-1/2 relative">
         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-zinc-500"></i>
-        <input type="text" id="expediting-search" onkeyup="renderItems()" placeholder="Search by Project ID, Name, PO, or Supplier..." class="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-zinc-800">
+        <input type="text" id="expediting-search" onkeyup="renderItems()" placeholder="Search Project ID, Name, PO, Supplier, or Buyer..." class="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-zinc-800">
       </div>
-      <div class="text-xs text-zinc-400 font-semibold" id="item-count">Loading Items...</div>
+      <div class="flex items-center gap-4">
+        <select id="buyer-filter" onchange="renderItems()" class="px-3 py-2 rounded-xl text-xs font-bold border border-zinc-800 bg-zinc-800 text-zinc-200">
+          <option value="ALL">All Buyers</option>
+          <option value="Norman">Norman</option>
+          <option value="Norlene">Norlene</option>
+        </select>
+        <div class="text-xs text-zinc-400 font-semibold" id="item-count">Loading Items...</div>
+      </div>
     </div>
 
-    <!-- CARDS / LIST CONTAINER -->
+    <!-- CARDS CONTAINER -->
     <div id="expediting-container" class="space-y-4">
       <div class="text-center p-12 text-zinc-500"><i class="fa-solid fa-spinner fa-spin mr-2 text-red-500"></i> Loading Expediting Records...</div>
+    </div>
+  </main>
+
+  <!-- ADMIN VIEW -->
+  <main id="view-admin" class="max-w-7xl mx-auto px-6 py-8 flex-grow w-full hidden">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- RECIPIENT MANAGEMENT -->
+      <div class="floating-bubble p-6 rounded-2xl border border-zinc-800 md:col-span-2 space-y-4">
+        <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-envelope-open-text text-red-500"></i> Email Notification Subscribers
+          </h2>
+          <span class="text-xs bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-full font-mono" id="recipient-count">0 Active</span>
+        </div>
+        <p class="text-xs text-zinc-400">Team members listed below will automatically receive daily email digests containing pending follow-up logs and ETAs.</p>
+
+        <!-- ADD RECIPIENT FORM -->
+        <form onsubmit="handleAddRecipient(event)" class="flex gap-3 text-xs pt-2">
+          <input type="text" id="rec-name" required placeholder="Name (e.g. Norlene)" class="w-1/3 p-2.5 rounded-xl border">
+          <input type="email" id="rec-email" required placeholder="Email Address" class="w-1/2 p-2.5 rounded-xl border">
+          <button type="submit" id="add-rec-btn" class="w-1/6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition">Add Member</button>
+        </form>
+
+        <!-- RECIPIENTS LIST -->
+        <div id="recipients-list" class="space-y-2 pt-3">
+          <div class="text-center p-4 text-zinc-500 text-xs"><i class="fa-solid fa-spinner fa-spin"></i> Loading Subscribers...</div>
+        </div>
+      </div>
+
+      <!-- SYSTEM UTILITIES & CONTROLS -->
+      <div class="floating-bubble p-6 rounded-2xl border border-zinc-800 space-y-4 h-fit">
+        <h2 class="text-base font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-3">
+          <i class="fa-solid fa-sliders text-amber-400"></i> System Utilities
+        </h2>
+        
+        <div class="space-y-3 text-xs">
+          <div class="p-3 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
+            <h4 class="font-bold text-white mb-1">Manual Trigger Email</h4>
+            <p class="text-zinc-400 mb-3 text-[11px]">Send an immediate test digest email to all subscribers listed on the left.</p>
+            <button onclick="triggerTestEmail()" id="trigger-mail-btn" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-black font-bold rounded-lg shadow transition">
+              <i class="fa-solid fa-paper-plane mr-1"></i> Trigger Daily Email Now
+            </button>
+          </div>
+
+          <div class="p-3 bg-zinc-800/60 rounded-xl border border-zinc-700/50">
+            <h4 class="font-bold text-white mb-1">Google Sheets Backend</h4>
+            <p class="text-zinc-400 text-[11px] mb-2">Master data storage resides securely in your synced Google Sheet repository.</p>
+            <a href="https://docs.google.com/spreadsheets/d/14neZV7GrX4hZNXabbPXCF9UlnlImbg95i7WsgWhk" target="_blank" class="text-red-400 hover:underline flex items-center gap-1 font-mono text-[11px]">
+              Open Google Sheet Tab <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -67,20 +133,27 @@
       </div>
 
       <form id="expediting-form" onsubmit="handleExpeditingSubmit(event)" class="space-y-3 text-xs">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-zinc-300 mb-1">BUYER</label>
+            <select id="field-buyer" required class="w-full p-2.5 rounded-xl border font-bold text-amber-400">
+              <option value="Norman" selected>Norman</option>
+              <option value="Norlene">Norlene</option>
+            </select>
+          </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">PROJECT ID</label>
-            <input type="text" id="field-project-id" required placeholder="e.g. PRJ-2026-04" class="w-full p-2.5 rounded-xl border">
+            <input type="text" id="field-project-id" required placeholder="PRJ-2026-04" class="w-full p-2.5 rounded-xl border">
           </div>
           <div>
             <label class="block font-bold text-zinc-300 mb-1">PROJECT NAME</label>
-            <input type="text" id="field-project-name" required placeholder="e.g. Tanks Fabrication" class="w-full p-2.5 rounded-xl border">
+            <input type="text" id="field-project-name" required placeholder="Tanks Fabrication" class="w-full p-2.5 rounded-xl border">
           </div>
         </div>
 
         <div>
           <label class="block font-bold text-zinc-300 mb-1">ITEM / DESCRIPTION</label>
-          <input type="text" id="field-item-desc" required placeholder="e.g. 200L Flanged Nozzles & Rubber Linings" class="w-full p-2.5 rounded-xl border">
+          <input type="text" id="field-item-desc" required placeholder="200L Flanged Nozzles & Rubber Linings" class="w-full p-2.5 rounded-xl border">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -140,7 +213,7 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-bold text-zinc-400 mb-1">NEW FOLLOW-UP NOTE</label>
-          <textarea id="comment-input" rows="3" placeholder="e.g. Called supplier rep John; plates currently in laser cutting, ETA pushed to Friday." class="w-full p-3 rounded-xl border border-zinc-800 bg-[#27272a] text-white"></textarea>
+          <textarea id="comment-input" rows="3" placeholder="e.g. Spoke to rep; plates laser cut, collection Friday morning." class="w-full p-3 rounded-xl border border-zinc-800 bg-[#27272a] text-white"></textarea>
         </div>
 
         <div>
@@ -163,13 +236,16 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZu54syPvg0a_BKBRtx-r9xaT45HS_ypbGccNH5w2aGrcsbvkRZeHsyMUxol51cv2vrg/exec";
     let expeditingData = [];
+    let recipientsData = [];
 
-    async function loadExpeditingData() {
+    async function loadData() {
       try {
         const res = await fetch(SCRIPT_URL);
         const json = await res.json();
+        
         expeditingData = (json.items || []).map(r => ({
           status: r['STATUS'] || 'PENDING',
+          buyer: r['BUYER'] || 'Norman',
           projectId: r['PROJECT ID'] || '',
           projectName: r['PROJECT NAME'] || '',
           itemDescription: r['ITEM DESCRIPTION'] || '',
@@ -181,14 +257,31 @@
           lastNotified: r['LAST NOTIFIED'] || 'Never',
           comments: r['COMMENTS'] || ''
         }));
+
+        recipientsData = json.recipients || [];
         renderItems();
+        renderRecipients();
       } catch (e) {
         console.error("Failed loading data", e);
-        document.getElementById('expediting-container').innerHTML = `<div class="text-center p-8 floating-bubble rounded-2xl text-red-400">Failed to load records from Google Sheets. Please check your Web App deployment.</div>`;
+        document.getElementById('expediting-container').innerHTML = `<div class="text-center p-8 floating-bubble rounded-2xl text-red-400">Failed to load records from Google Sheets.</div>`;
       }
     }
 
-    document.addEventListener("DOMContentLoaded", loadExpeditingData);
+    document.addEventListener("DOMContentLoaded", loadData);
+
+    function switchView(view) {
+      if (view === 'tracker') {
+        document.getElementById('view-tracker').classList.remove('hidden');
+        document.getElementById('view-admin').classList.add('hidden');
+        document.getElementById('nav-tracker').className = "bg-red-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow";
+        document.getElementById('nav-admin').className = "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 border border-zinc-700";
+      } else {
+        document.getElementById('view-tracker').classList.add('hidden');
+        document.getElementById('view-admin').classList.remove('hidden');
+        document.getElementById('nav-admin').className = "bg-red-600 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow";
+        document.getElementById('nav-tracker').className = "bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 border border-zinc-700";
+      }
+    }
 
     function openExpeditingModal() { document.getElementById('expediting-modal').classList.remove('hidden'); }
     function closeExpeditingModal() { document.getElementById('expediting-modal').classList.add('hidden'); }
@@ -201,7 +294,6 @@
       document.getElementById('comment-target-item').value = itemDesc;
       document.getElementById('comment-input').value = '';
       document.getElementById('comment-history').innerText = item.comments || 'No previous comments logged.';
-      
       document.getElementById('comment-modal').classList.remove('hidden');
     }
 
@@ -211,7 +303,6 @@
       const poNumber = document.getElementById('comment-target-po').value;
       const itemDesc = document.getElementById('comment-target-item').value;
       const commentText = document.getElementById('comment-input').value.trim();
-      
       if (!commentText) return;
 
       const btn = document.getElementById('save-comment-btn');
@@ -229,9 +320,7 @@
         const item = expeditingData.find(i => i.poNumber === poNumber && i.itemDescription === itemDesc);
         const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
         const formatted = `[${timestamp}] ${commentText}`;
-        if (item) {
-          item.comments = item.comments ? `${item.comments}\n${formatted}` : formatted;
-        }
+        if (item) item.comments = item.comments ? `${item.comments}\n${formatted}` : formatted;
 
         closeCommentModal();
         renderItems();
@@ -252,6 +341,7 @@
       const payload = {
         action: 'add',
         status: 'PENDING',
+        buyer: document.getElementById('field-buyer').value,
         projectId: document.getElementById('field-project-id').value,
         projectName: document.getElementById('field-project-name').value,
         itemDescription: document.getElementById('field-item-desc').value,
@@ -296,22 +386,101 @@
       });
     }
 
+    // ADMIN RECIPIENTS LOGIC
+    async function handleAddRecipient(e) {
+      e.preventDefault();
+      const name = document.getElementById('rec-name').value.trim();
+      const email = document.getElementById('rec-email').value.trim();
+      if (!name || !email) return;
+
+      const btn = document.getElementById('add-rec-btn');
+      btn.disabled = true;
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_recipient', name, email })
+      });
+
+      recipientsData.push({ name, email, addedDate: 'Just now' });
+      document.getElementById('rec-name').value = '';
+      document.getElementById('rec-email').value = '';
+      btn.disabled = false;
+      renderRecipients();
+    }
+
+    async function removeRecipient(email) {
+      recipientsData = recipientsData.filter(r => r.email !== email);
+      renderRecipients();
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove_recipient', email })
+      });
+    }
+
+    async function triggerTestEmail() {
+      const btn = document.getElementById('trigger-mail-btn');
+      btn.disabled = true;
+      btn.innerText = "Sending Mail...";
+
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'trigger_test_email' })
+      });
+
+      alert("Expediting summary digest sent to all active subscribers!");
+      btn.disabled = false;
+      btn.innerText = "Trigger Daily Email Now";
+    }
+
+    function renderRecipients() {
+      const container = document.getElementById('recipients-list');
+      document.getElementById('recipient-count').innerText = `${recipientsData.length} Active`;
+
+      if (recipientsData.length === 0) {
+        container.innerHTML = `<div class="text-center p-3 text-zinc-500 text-xs">No email subscribers added.</div>`;
+        return;
+      }
+
+      container.innerHTML = recipientsData.map(r => `
+        <div class="p-3 bg-[#27272a]/60 border border-zinc-800 rounded-xl flex justify-between items-center text-xs">
+          <div>
+            <strong class="text-white block font-bold">${r.name}</strong>
+            <span class="text-zinc-400 font-mono text-[11px]">${r.email}</span>
+          </div>
+          <button onclick="removeRecipient('${r.email}')" class="text-zinc-500 hover:text-red-400 p-1.5 transition">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
     function renderItems() {
       const query = (document.getElementById('expediting-search').value || '').toLowerCase();
+      const buyerFilter = document.getElementById('buyer-filter').value;
       const container = document.getElementById('expediting-container');
 
-      const filtered = expeditingData.filter(i =>
-        i.projectId.toLowerCase().includes(query) ||
-        i.projectName.toLowerCase().includes(query) ||
-        i.poNumber.toLowerCase().includes(query) ||
-        i.supplier.toLowerCase().includes(query) ||
-        i.itemDescription.toLowerCase().includes(query)
-      );
+      const filtered = expeditingData.filter(i => {
+        const matchesQuery = i.projectId.toLowerCase().includes(query) ||
+          i.projectName.toLowerCase().includes(query) ||
+          i.poNumber.toLowerCase().includes(query) ||
+          i.supplier.toLowerCase().includes(query) ||
+          i.buyer.toLowerCase().includes(query) ||
+          i.itemDescription.toLowerCase().includes(query);
+        const matchesBuyer = buyerFilter === 'ALL' || i.buyer === buyerFilter;
+        return matchesQuery && matchesBuyer;
+      });
 
       document.getElementById('item-count').innerText = `${filtered.length} Active Items`;
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center p-12 floating-bubble rounded-2xl text-zinc-500">No expediting records found.</div>`;
+        container.innerHTML = `<div class="text-center p-12 floating-bubble rounded-2xl text-zinc-500">No expediting records match your filters.</div>`;
         return;
       }
 
@@ -326,6 +495,7 @@
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <span class="text-[10px] font-black px-2 py-0.5 rounded ${isCompleted ? 'bg-emerald-600' : 'bg-amber-600'} text-white uppercase">${i.status}</span>
+                  <span class="text-xs font-black bg-zinc-800 text-amber-400 px-2 py-0.5 rounded uppercase">Buyer: ${i.buyer}</span>
                   <span class="text-xs font-bold text-red-500">${i.projectId} — ${i.projectName}</span>
                   <span class="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded font-mono">PO: ${i.poNumber}</span>
                 </div>
