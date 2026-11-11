@@ -299,8 +299,8 @@
           itemDescription: r['ITEM DESCRIPTION'] || '',
           supplier: r['SUPPLIER'] || '',
           poNumber: r['PO NUMBER'] || '',
-          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED'] || r['DATE ORDERED'] || r['COLLECTED']),
-          eta: cleanDateStr(r['ETA']),
+          dateCollected: cleanDateStr(r['DATE_ORDERED'] || r['DATE ORDERED/COLLECTED'] || r['DATE ORDERED'] || r['COLLECTED']),
+          eta: cleanDateStr(r['EXPECTED_ETA'] || r['ETA']),
           frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
           lastNotified: cleanDateStr(r['LAST NOTIFIED']),
           comments: r['COMMENTS'] || ''
@@ -614,7 +614,6 @@
         const safePo = i.poNumber.replace(/'/g, "\\'");
         const safeItem = i.itemDescription.replace(/'/g, "\\'");
 
-        // Overdue calculation using local date parts
         let isOverdue = false;
         if (i.eta && i.eta !== 'N/A' && !isCompleted) {
           const parts = i.eta.split('-');
@@ -647,9 +646,9 @@
 
                 <h3 class="text-base font-bold text-white pt-1">${i.itemDescription}</h3>
 
-                <!-- METADATA GRID (CLEAN PO LABELING & FIXED DATES) -->
+                <!-- METADATA GRID (PO UNIFORM & DATE FIXED) -->
                 <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-2 border-t border-zinc-800/60 mt-2">
-                  <span class="py-1"><strong class="text-white font-bold">PO:</strong> <span class="font-mono text-red-400">${i.poNumber || 'N/A'}</span></span>
+                  <span class="py-1"><strong class="text-white font-bold">PO:</strong> ${i.poNumber || 'N/A'}</span>
                   <span class="py-1"><strong class="text-white font-bold">Supplier:</strong> ${i.supplier || 'N/A'}</span>
                   <span class="py-1"><strong class="text-white font-bold">Ordered:</strong> ${i.dateCollected}</span>
                   <span class="py-1 ${isOverdue ? 'text-red-400 font-bold' : ''}"><strong class="text-white font-bold">ETA:</strong> ${i.eta}</span>
