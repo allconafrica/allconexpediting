@@ -215,7 +215,9 @@
           <label class="block font-bold text-zinc-300 mb-1">EMAIL REMINDER FREQUENCY</label>
           <select id="field-frequency" required class="w-full p-2.5 rounded-xl border font-semibold text-red-400">
             <option value="DAILY">DAILY (Urgent Follow-Up)</option>
+            <option value="EVERY 3RD DAY">EVERY 3RD DAY</option>
             <option value="WEEKLY" selected>WEEKLY (Standard Tracking)</option>
+            <option value="BI-WEEKLY">BI-WEEKLY</option>
             <option value="MONTHLY">MONTHLY (Long Lead Times)</option>
           </select>
         </div>
@@ -297,7 +299,7 @@
           itemDescription: r['ITEM DESCRIPTION'] || '',
           supplier: r['SUPPLIER'] || '',
           poNumber: r['PO NUMBER'] || '',
-          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED']),
+          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED'] || r['DATE ORDERED'] || r['COLLECTED']),
           eta: cleanDateStr(r['ETA']),
           frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
           lastNotified: cleanDateStr(r['LAST NOTIFIED']),
@@ -319,12 +321,10 @@
     document.addEventListener("DOMContentLoaded", loadData);
 
     function populateStatusDropdowns() {
-      // Filter dropdown
       const filterSelect = document.getElementById('status-filter');
       filterSelect.innerHTML = `<option value="ALL">All Statuses</option>` + 
         activeStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
 
-      // Modal select
       const modalSelect = document.getElementById('field-status');
       modalSelect.innerHTML = activeStatuses.map(s => `<option value="${s}">${s}</option>`).join('');
     }
@@ -458,7 +458,6 @@
       });
     }
 
-    // ADMIN STATUSES LOGIC
     async function handleAddStatus(e) {
       e.preventDefault();
       const statusName = document.getElementById('status-name-input').value.trim();
@@ -508,7 +507,6 @@
       `).join('');
     }
 
-    // ADMIN RECIPIENTS LOGIC
     async function handleAddRecipient(e) {
       e.preventDefault();
       const name = document.getElementById('rec-name').value.trim();
@@ -616,11 +614,12 @@
         const safePo = i.poNumber.replace(/'/g, "\\'");
         const safeItem = i.itemDescription.replace(/'/g, "\\'");
 
-        // Overdue Calculation
+        // Overdue calculation using local date parts
         let isOverdue = false;
         if (i.eta && i.eta !== 'N/A' && !isCompleted) {
-          const etaD = new Date(i.eta);
-          if (!isNaN(etaD.getTime())) {
+          const parts = i.eta.split('-');
+          if (parts.length === 3) {
+            const etaD = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
             etaD.setHours(0,0,0,0);
             if (today > etaD) isOverdue = true;
           }
@@ -632,11 +631,10 @@
         if (i.status === 'Completed') statusBadgeColor = 'bg-emerald-600';
 
         return `
-          <div class="floating-bubble border ${isOverdue ? 'border-red-600/70 shadow-red-950/20' : isCompleted ? 'border-emerald-800/40 opacity-60' : 'border-zinc-800'} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
+          <div class="floating-bubble border border-zinc-800 ${isCompleted ? 'opacity-60' : ''} rounded-2xl p-5 flex flex-col gap-3 transition hover:border-zinc-700">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div class="space-y-1 w-full">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <!-- INLINE STATUS DROPDOWN -->
                   <select onchange="changeStatus('${safePo}', '${safeItem}', this.value)" class="text-[10px] font-black px-2 py-1 rounded ${statusBadgeColor} text-white uppercase border-none cursor-pointer">
                     ${activeStatuses.map(s => `<option value="${s}" ${i.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                   </select>
@@ -649,21 +647,20 @@
 
                 <h3 class="text-base font-bold text-white pt-1">${i.itemDescription}</h3>
 
-                <!-- METADATA GRID (PO PROMOTED HERE) -->
+                <!-- METADATA GRID (CLEAN PO LABELING & FIXED DATES) -->
                 <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-2 border-t border-zinc-800/60 mt-2">
-                  <span class="bg-red-950/40 border border-red-800/50 px-2.5 py-1 rounded-lg font-mono text-red-300">
-                    <strong class="text-red-400 font-sans uppercase text-[10px]">PO:</strong> ${i.poNumber}
-                  </span>
-                  <span class="py-1"><strong class="text-zinc-200">Supplier:</strong> ${i.supplier}</span>
-                  <span class="py-1"><strong class="text-zinc-200">Ordered:</strong> ${i.dateCollected}</span>
-                  <span class="py-1 ${isOverdue ? 'text-red-400 font-bold' : ''}"><strong class="text-zinc-200">ETA:</strong> ${i.eta}</span>
+                  <span class="py-1"><strong class="text-white font-bold">PO:</strong> <span class="font-mono text-red-400">${i.poNumber || 'N/A'}</span></span>
+                  <span class="py-1"><strong class="text-white font-bold">Supplier:</strong> ${i.supplier || 'N/A'}</span>
+                  <span class="py-1"><strong class="text-white font-bold">Ordered:</strong> ${i.dateCollected}</span>
+                  <span class="py-1 ${isOverdue ? 'text-red-400 font-bold' : ''}"><strong class="text-white font-bold">ETA:</strong> ${i.eta}</span>
                   
-                  <!-- INLINE FREQUENCY SELECTOR -->
                   <div class="flex items-center gap-1.5 py-0.5">
-                    <strong class="text-zinc-200">Reminder:</strong>
+                    <strong class="text-white font-bold">Reminder:</strong>
                     <select onchange="changeFrequency('${safePo}', '${safeItem}', this.value)" class="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-800 text-red-400 border border-zinc-700 cursor-pointer">
                       <option value="DAILY" ${i.frequency === 'DAILY' ? 'selected' : ''}>DAILY</option>
+                      <option value="EVERY 3RD DAY" ${i.frequency === 'EVERY 3RD DAY' ? 'selected' : ''}>EVERY 3RD DAY</option>
                       <option value="WEEKLY" ${i.frequency === 'WEEKLY' ? 'selected' : ''}>WEEKLY</option>
+                      <option value="BI-WEEKLY" ${i.frequency === 'BI-WEEKLY' ? 'selected' : ''}>BI-WEEKLY</option>
                       <option value="MONTHLY" ${i.frequency === 'MONTHLY' ? 'selected' : ''}>MONTHLY</option>
                     </select>
                   </div>
