@@ -299,8 +299,8 @@
           itemDescription: r['ITEM DESCRIPTION'] || '',
           supplier: r['SUPPLIER'] || '',
           poNumber: r['PO NUMBER'] || '',
-          dateCollected: cleanDateStr(r['DATE_ORDERED']),
-          eta: cleanDateStr(r['EXPECTED_ETA']),
+          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED']),
+          eta: cleanDateStr(r['ETA']),
           frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
           lastNotified: cleanDateStr(r['LAST NOTIFIED']),
           comments: r['COMMENTS'] || ''
@@ -646,7 +646,7 @@
 
                 <h3 class="text-base font-bold text-white pt-1">${i.itemDescription}</h3>
 
-                <!-- METADATA GRID (PO UNIFORM & DATE FIXED) -->
+                <!-- METADATA GRID (CLEAN PO & DATE ORDERED MAPPED) -->
                 <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-2 border-t border-zinc-800/60 mt-2">
                   <span class="py-1"><strong class="text-white font-bold">PO:</strong> ${i.poNumber || 'N/A'}</span>
                   <span class="py-1"><strong class="text-white font-bold">Supplier:</strong> ${i.supplier || 'N/A'}</span>
