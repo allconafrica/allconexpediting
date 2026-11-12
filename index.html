@@ -299,8 +299,8 @@
           itemDescription: r['ITEM DESCRIPTION'] || '',
           supplier: r['SUPPLIER'] || '',
           poNumber: r['PO NUMBER'] || '',
-          dateCollected: cleanDateStr(r['DATE_ORDERED'] || r['DATE ORDERED/COLLECTED'] || r['DATE ORDERED'] || r['COLLECTED']),
-          eta: cleanDateStr(r['EXPECTED_ETA'] || r['ETA']),
+          dateCollected: cleanDateStr(r['DATE_ORDERED']),
+          eta: cleanDateStr(r['EXPECTED_ETA']),
           frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
           lastNotified: cleanDateStr(r['LAST NOTIFIED']),
           comments: r['COMMENTS'] || ''
