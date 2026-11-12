@@ -292,18 +292,18 @@
         }
 
         expeditingData = (json.items || []).map(r => ({
-          status: r['STATUS'] || 'PO Sent',
-          buyer: r['BUYER'] || 'Norman',
-          projectId: r['PROJECT ID'] || '',
-          projectName: r['PROJECT NAME'] || '',
-          itemDescription: r['ITEM DESCRIPTION'] || '',
-          supplier: r['SUPPLIER'] || '',
-          poNumber: r['PO NUMBER'] || '',
-          dateCollected: cleanDateStr(r['DATE ORDERED/COLLECTED']),
-          eta: cleanDateStr(r['ETA']),
-          frequency: r['REMINDER FREQUENCY'] || 'WEEKLY',
-          lastNotified: cleanDateStr(r['LAST NOTIFIED']),
-          comments: r['COMMENTS'] || ''
+          status: r.status || 'PO Sent',
+          buyer: r.buyer || 'Norman',
+          projectId: r.projectId || '',
+          projectName: r.projectName || '',
+          itemDescription: r.itemDescription || '',
+          supplier: r.supplier || '',
+          poNumber: r.poNumber || '',
+          dateCollected: cleanDateStr(r.dateCollected),
+          eta: cleanDateStr(r.eta),
+          frequency: r.frequency || 'WEEKLY',
+          lastNotified: cleanDateStr(r.lastNotified),
+          comments: r.comments || ''
         }));
 
         recipientsData = json.recipients || [];
@@ -646,7 +646,7 @@
 
                 <h3 class="text-base font-bold text-white pt-1">${i.itemDescription}</h3>
 
-                <!-- METADATA GRID (CLEAN PO & DATE ORDERED MAPPED) -->
+                <!-- METADATA GRID -->
                 <div class="text-xs text-zinc-400 flex flex-wrap gap-4 pt-2 border-t border-zinc-800/60 mt-2">
                   <span class="py-1"><strong class="text-white font-bold">PO:</strong> ${i.poNumber || 'N/A'}</span>
                   <span class="py-1"><strong class="text-white font-bold">Supplier:</strong> ${i.supplier || 'N/A'}</span>
